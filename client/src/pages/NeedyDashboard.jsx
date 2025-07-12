@@ -106,15 +106,16 @@ const NeedyDashboard = () => {
   }
 
   const fetchRecentSearches = async () => {
-    try {
-      const result = await getRecentSearches(auth.token)
-      if (result.success) {
-        setRecentSearches(result.data)
-      }
-    } catch (error) {
-      console.error("Failed to fetch recent searches")
+  try {
+    const result = await getRecentSearches(auth.token)
+    if (result.success) {
+      const limitedSearches = result.data.slice(0,3)
+      setRecentSearches(limitedSearches)
     }
+  } catch (error) {
+    console.error("Failed to fetch recent searches")
   }
+}
 
   const fetchAvailableCities = async () => {
     try {
@@ -212,7 +213,7 @@ const NeedyDashboard = () => {
       const result = await searchDonors(searchQuery, selectedRegion, prescriptionFile, auth.token)
       if (result.success) {
         setSearchResults(result.data)
-        fetchRecentSearches() // Refresh recent searches
+        fetchRecentSearches()
         setSuccess(`Found ${result.data.length} donors`)
       } else {
         setError(result.message)
@@ -404,7 +405,6 @@ const NeedyDashboard = () => {
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
               required
-              size="4"
             >
               <option value="">Select State</option>
               {states.map((state, index) => (
@@ -427,7 +427,6 @@ const NeedyDashboard = () => {
               disabled={!selectedState || loadingCities}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
               required
-              size="4"
             >
               <option value="">
                 {loadingCities ? "Loading cities..." : selectedState ? "Select City" : "Select State First"}

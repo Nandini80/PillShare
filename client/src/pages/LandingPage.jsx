@@ -23,11 +23,10 @@ const PillShareLanding = () => {
   const [error, setError] = useState("")
 
   const navigate = useNavigate()
-  const { auth, login } = useContext(AuthContext) // Use the context properly
+  const { auth, login } = useContext(AuthContext)
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  // Check if user is already authenticated and redirect
   useEffect(() => {
     if (auth.token && auth.role) {
       navigate(auth.role === "donor" ? "/donor-dashboard" : "/needy-dashboard")
