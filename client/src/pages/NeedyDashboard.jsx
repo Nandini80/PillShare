@@ -20,8 +20,18 @@ import {
   ChevronRight,
   Star,
   ChevronDown,
+  Upload,
+  X,
 } from "lucide-react"
-import { getProfile, updateProfile, searchDonors, changePassword, getRecentSearches } from "../services/needyService"
+import {
+  getProfile,
+  updateProfile,
+  searchDonors,
+  changePassword,
+  getRecentSearches,
+  getAvailableCities,
+  getAvailableMedicines,
+} from "../services/needyService"
 import axios from "axios"
 
 const NeedyDashboard = () => {
@@ -45,6 +55,7 @@ const NeedyDashboard = () => {
   const [selectedRegion, setSelectedRegion] = useState("")
   const [selectedState, setSelectedState] = useState("")
   const [selectedCity, setSelectedCity] = useState("")
+  const [prescriptionFile, setPrescriptionFile] = useState(null)
 
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
@@ -55,6 +66,8 @@ const NeedyDashboard = () => {
   const [states, setStates] = useState([])
   const [cities, setCities] = useState([])
   const [loadingCities, setLoadingCities] = useState(false)
+  const [availableCities, setAvailableCities] = useState([])
+  const [availableMedicines, setAvailableMedicines] = useState([])
 
   const { auth, logout } = useContext(AuthContext)
   const navigate = useNavigate()
@@ -64,6 +77,8 @@ const NeedyDashboard = () => {
       fetchProfile()
       fetchRecentSearches()
       fetchStates()
+      fetchAvailableCities()
+      fetchAvailableMedicines()
     }
   }, [auth.token])
 
@@ -101,6 +116,28 @@ const NeedyDashboard = () => {
       }
     } catch (error) {
       console.error("Failed to fetch recent searches")
+    }
+  }
+
+  const fetchAvailableCities = async () => {
+    try {
+      const result = await getAvailableCities(auth.token)
+      if (result.success) {
+        setAvailableCities(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch available cities")
+    }
+  }
+
+  const fetchAvailableMedicines = async () => {
+    try {
+      const result = await getAvailableMedicines(auth.token)
+      if (result.success) {
+        setAvailableMedicines(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch available medicines")
     }
   }
 
@@ -142,6 +179,29 @@ const NeedyDashboard = () => {
     navigate("/")
   }
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size should be less than 5MB")
+        return
+      }
+      // Check file type
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only images (JPEG, PNG) and PDF files are allowed")
+        return
+      }
+      setPrescriptionFile(file)
+      setError("")
+    }
+  }
+
+  const removePrescriptionFile = () => {
+    setPrescriptionFile(null)
+  }
+
   const handleSearch = async () => {
     if (!searchQuery || !selectedRegion) {
       setError("Please enter medicine name and select region")
@@ -152,10 +212,11 @@ const NeedyDashboard = () => {
     setError("")
 
     try {
-      const result = await searchDonors(searchQuery, selectedRegion, auth.token)
+      const result = await searchDonors(searchQuery, selectedRegion, prescriptionFile, auth.token)
       if (result.success) {
         setSearchResults(result.data)
         fetchRecentSearches() // Refresh recent searches
+        setSuccess(`Found ${result.data.length} donors`)
       } else {
         setError(result.message)
         setSearchResults([])
@@ -324,13 +385,18 @@ const NeedyDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Medicine Name</label>
-                      <input
-                        type="text"
+                      <select
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="e.g., Paracetamol 500mg"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      >
+                        <option value="">Select Medicine</option>
+                        {availableMedicines.map((medicine, index) => (
+                          <option key={index} value={medicine.name}>
+                            {medicine.name} ({medicine.availableCount} available)
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
@@ -340,19 +406,48 @@ const NeedyDashboard = () => {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">Select Region</option>
-                        <option value="faridabad">Faridabad</option>
-                        <option value="gurgaon">Gurgaon</option>
-                        <option value="delhi">Delhi</option>
-                        <option value="noida">Noida</option>
+                        {availableCities.map((city, index) => (
+                          <option key={index} value={city.name}>
+                            {city.name} ({city.medicineCount} medicines available)
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Upload Prescription</label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Click to upload prescription</p>
-                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                      {prescriptionFile ? (
+                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                          <div className="flex items-center">
+                            <FileText className="h-8 w-8 text-blue-500 mr-3" />
+                            <div className="text-left">
+                              <p className="text-sm font-medium text-gray-900">{prescriptionFile.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(prescriptionFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={removePrescriptionFile}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 mb-2">Click to upload prescription</p>
+                          <p className="text-xs text-gray-400">Supports: JPEG, PNG, PDF (Max 5MB)</p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                      />
                     </div>
                   </div>
                   <button
@@ -390,7 +485,7 @@ const NeedyDashboard = () => {
                               </div>
                               <p className="text-sm text-gray-600 mb-1">
                                 <Pill className="h-4 w-4 inline mr-1" />
-                                {donor.medicine} - {donor.quantity}
+                                {donor.medicine} - {donor.quantity} units
                               </p>
                               <p className="text-sm text-gray-600 mb-1">
                                 <MapPin className="h-4 w-4 inline mr-1" />
@@ -429,17 +524,21 @@ const NeedyDashboard = () => {
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Searches</h2>
                   <div className="space-y-3">
-                    {recentSearches.map((search, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{search.medicine}</p>
-                          <p className="text-sm text-gray-600">
-                            {search.region} • {new Date(search.date).toLocaleDateString()}
-                          </p>
+                    {recentSearches.length > 0 ? (
+                      recentSearches.map((search, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium text-gray-900">{search.medicine}</p>
+                            <p className="text-sm text-gray-600">
+                              {search.region} • {new Date(search.date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No recent searches</p>
+                    )}
                   </div>
                 </div>
               </div>

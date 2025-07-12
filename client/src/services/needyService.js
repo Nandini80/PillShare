@@ -41,15 +41,61 @@ export const updateProfile = async (data, token) => {
   }
 }
 
-export const searchDonors = async (searchQuery, region, token) => {
+export const getAvailableCities = async (token) => {
   try {
-    const res = await fetch(`${API_BASE}/search`, {
-      method: "POST",
+    const res = await fetch(`${API_BASE}/available-cities`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ searchQuery, region }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch available cities")
+    }
+    return result
+  } catch (error) {
+    console.error("Error fetching available cities:", error)
+    return { success: false, data: [] }
+  }
+}
+
+export const getAvailableMedicines = async (token) => {
+  try {
+    const res = await fetch(`${API_BASE}/available-medicines`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch available medicines")
+    }
+    return result
+  } catch (error) {
+    console.error("Error fetching available medicines:", error)
+    return { success: false, data: [] }
+  }
+}
+
+export const searchDonors = async (searchQuery, region, prescriptionFile, token) => {
+  try {
+    const formData = new FormData()
+    formData.append("searchQuery", searchQuery)
+    formData.append("region", region)
+    if (prescriptionFile) {
+      formData.append("prescription", prescriptionFile)
+    }
+
+    const res = await fetch(`${API_BASE}/search`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     })
     const result = await res.json()
     if (!res.ok) {

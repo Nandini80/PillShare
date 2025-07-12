@@ -163,3 +163,23 @@ export const changePassword = async (passwordData, token) => {
     return { success: false, message: error.message }
   }
 }
+
+export const getNeedyRequests = async (token) => {
+  try {
+    const res = await fetch(`${API_BASE}/needy-requests`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch needy requests")
+    }
+    return result
+  } catch (error) {
+    console.error("Error fetching needy requests:", error)
+    return { success: false, data: [] }
+  }
+}
