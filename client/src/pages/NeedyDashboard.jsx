@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
@@ -17,7 +15,6 @@ import {
   rateDonor,
 } from "../services/needyService"
 import axios from "axios"
-import Footer from "../components/Footer"
 import NeedyFindMedicine from "../components/needy/NeedyFindMedicine"
 import NeedyRequests from "../components/needy/NeedyRequests"
 
@@ -81,7 +78,6 @@ const NeedyDashboard = () => {
     }
   }, [selectedState])
 
-  // Profile completeness check function
   const isProfileComplete = () => {
     return (
       profileData.name && profileData.email && profileData.phone && profileData.address && selectedState && selectedCity
@@ -180,12 +176,10 @@ const NeedyDashboard = () => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         setError("File size should be less than 5MB")
         return
       }
-      // Check file type
       const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
       if (!allowedTypes.includes(file.type)) {
         setError("Only images (JPEG, PNG) and PDF files are allowed")
@@ -317,7 +311,6 @@ const NeedyDashboard = () => {
     <div className="bg-white rounded-lg shadow-sm border p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h2>
 
-      {/* Profile Completion Status */}
       <div
         className={`rounded-xl p-4 border mb-6 ${isProfileComplete() ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}`}
       >
@@ -627,8 +620,6 @@ const NeedyDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* <Footer /> */}
     </div>
   )
 }

@@ -1,10 +1,9 @@
 const User = require("../models/User")
 const Medicine = require("../models/Medicine")
 const PrescriptionSearch = require("../models/PrescriptionSearch")
-const DonationRequest = require("../models/DonationRequest") // Import DonationRequest model
+const DonationRequest = require("../models/DonationRequest")
 const bcrypt = require("bcryptjs")
 
-// Get donor profile
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password")
@@ -37,7 +36,6 @@ exports.getProfile = async (req, res) => {
   }
 }
 
-// Update donor profile
 exports.updateProfile = async (req, res) => {
   try {
     const { name, email, phone, city, state, address } = req.body
@@ -50,7 +48,6 @@ exports.updateProfile = async (req, res) => {
       })
     }
 
-    // Check if email is already taken by another user
     if (email !== user.email) {
       const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } })
       if (existingUser) {
@@ -91,7 +88,6 @@ exports.updateProfile = async (req, res) => {
   }
 }
 
-// Get all medicines for donor
 exports.getMedicines = async (req, res) => {
   try {
     const medicines = await Medicine.find({ donorId: req.user._id }).sort({ createdAt: -1 })
@@ -109,12 +105,9 @@ exports.getMedicines = async (req, res) => {
   }
 }
 
-// Add new medicine
 exports.addMedicine = async (req, res) => {
   try {
     const { name, quantity, expiryDate, category, description } = req.body
-
-    // Get donor's location info
     const donor = await User.findById(req.user._id)
 
     const medicine = new Medicine({
@@ -147,7 +140,6 @@ exports.addMedicine = async (req, res) => {
   }
 }
 
-// Update medicine
 exports.updateMedicine = async (req, res) => {
   try {
     const { id } = req.params
@@ -184,7 +176,6 @@ exports.updateMedicine = async (req, res) => {
   }
 }
 
-// Delete medicine
 exports.deleteMedicine = async (req, res) => {
   try {
     const { id } = req.params
@@ -210,7 +201,6 @@ exports.deleteMedicine = async (req, res) => {
   }
 }
 
-// Delete expired medicines - Updated route name
 exports.deleteExpiredMedicines = async (req, res) => {
   try {
     const result = await Medicine.deleteMany({
@@ -231,13 +221,9 @@ exports.deleteExpiredMedicines = async (req, res) => {
   }
 }
 
-// Get needy requests for donor's medicines
 exports.getNeedyRequests = async (req, res) => {
   try {
-    // Get donor's location
     const donor = await User.findById(req.user._id)
-
-    // Find prescription searches that match donor's medicines and location
     const needyRequests = await PrescriptionSearch.find({
       $or: [{ region: { $regex: donor.city, $options: "i" } }, { region: { $regex: donor.state, $options: "i" } }],
     })
@@ -245,14 +231,12 @@ exports.getNeedyRequests = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(20)
 
-    // Get donor's medicines to match with requests
     const donorMedicines = await Medicine.find({
       donorId: req.user._id,
       expiryDate: { $gte: new Date() },
       isAvailable: true,
     })
 
-    // Filter requests that match donor's available medicines
     const matchingRequests = needyRequests.filter((request) => {
       return donorMedicines.some(
         (medicine) =>
@@ -271,7 +255,7 @@ exports.getNeedyRequests = async (req, res) => {
       region: request.region,
       prescriptionUrl: request.prescriptionUrl,
       requestDate: request.createdAt,
-      status: "pending", // This could be enhanced with actual status tracking
+      status: "pending",
     }))
 
     res.json({
@@ -287,7 +271,6 @@ exports.getNeedyRequests = async (req, res) => {
   }
 }
 
-// Approve donation request
 exports.approveDonationRequest = async (req, res) => {
   try {
     const { requestId } = req.params
@@ -343,7 +326,6 @@ exports.approveDonationRequest = async (req, res) => {
   }
 }
 
-// Reject donation request
 exports.rejectDonationRequest = async (req, res) => {
   try {
     const { requestId } = req.params
@@ -391,7 +373,6 @@ exports.rejectDonationRequest = async (req, res) => {
   }
 }
 
-// Mark request as completed
 exports.completeDonationRequest = async (req, res) => {
   try {
     const { requestId } = req.params
@@ -437,7 +418,6 @@ exports.completeDonationRequest = async (req, res) => {
   }
 }
 
-// Get all requests for donor
 exports.getAllRequests = async (req, res) => {
   try {
     const requests = await DonationRequest.find({ donorId: req.user._id })
@@ -475,7 +455,6 @@ exports.getAllRequests = async (req, res) => {
   }
 }
 
-// Change password
 exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body
@@ -512,7 +491,6 @@ exports.changePassword = async (req, res) => {
   }
 }
 
-// Get dashboard stats
 exports.getDashboardStats = async (req, res) => {
   try {
     const totalMedicines = await Medicine.countDocuments({ donorId: req.user._id })

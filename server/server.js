@@ -4,23 +4,17 @@ const dotenv = require("dotenv")
 const cors = require("cors")
 const path = require("path")
 const fs = require("fs")
-
-// Load environment variables
-dotenv.config()
-
-// Import routes
 const authRoutes = require("./routes/authRoutes")
 const needyRoutes = require("./routes/needyRoutes")
 const donorRoutes = require("./routes/donorRoutes")
 
 const app = express()
 
-// Middleware
+dotenv.config()
+
 app.use(cors())
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
-
-// Create uploads directories if they don't exist
 const uploadsDir = path.join(__dirname, "uploads")
 const prescriptionsDir = path.join(__dirname, "uploads", "prescriptions")
 
@@ -31,16 +25,13 @@ if (!fs.existsSync(prescriptionsDir)) {
   fs.mkdirSync(prescriptionsDir, { recursive: true })
 }
 
-// Static file serving
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
-// Database connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err))
 
-// Health check route
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -57,12 +48,10 @@ app.get("/api/health", (req, res) => {
   })
 })
 
-// API Routes
 app.use("/api/auth", authRoutes)
 app.use("/api/needy", needyRoutes)
 app.use("/api/donor", donorRoutes)
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err)
 
@@ -103,7 +92,6 @@ app.use((err, req, res, next) => {
   })
 })
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,

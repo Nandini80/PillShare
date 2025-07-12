@@ -22,14 +22,11 @@ const NeedyFindMedicine = ({
   selectedRegion,
   setSelectedRegion,
   prescriptionFile,
-  setPrescriptionFile,
   availableMedicines,
   availableCities,
   searchResults,
   recentSearches,
   loading,
-  error,
-  success,
   handleSearch,
   handleCreateRequest,
   handleFileUpload,
@@ -287,7 +284,7 @@ const NeedyFindMedicine = ({
           </div>
         </div>
       )}
-      
+
       {/* Medicine Statistics */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Medicines Overview</h2>

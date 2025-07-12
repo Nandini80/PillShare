@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Heart, Package, Pill, AlertTriangle, Bell, X } from "lucide-react"
 
@@ -10,7 +8,6 @@ const DonorDashboardHome = ({
   setActiveTab,
   handleDeleteExpired,
   allRequests,
-  fetchAllRequests,
 }) => {
   const [showRequestAlert, setShowRequestAlert] = useState(false)
   const [pendingRequests, setPendingRequests] = useState([])

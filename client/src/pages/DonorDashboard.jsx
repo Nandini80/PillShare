@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
@@ -18,10 +16,8 @@ import {
   completeDonationRequest,
 } from "../services/donorService"
 import axios from "axios"
-import Footer from "../components/Footer"
 import DonorDashboardHome from "../components/donor/DonorDashboardHome"
 import DonorRequests from "../components/donor/DonorRequests"
-import Select from 'react-select';
 
 const DonorDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -84,7 +80,6 @@ const DonorDashboard = () => {
     }
   }, [selectedState])
 
-  // Profile completeness check function
   const isProfileComplete = () => {
     return profile.name && profile.email && profile.phone && profile.address && selectedState && selectedCity
   }
@@ -882,8 +877,6 @@ const DonorDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* <Footer /> */}
     </div>
   )
 }
