@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:5000/api/donor"
+import { BACKEND_URL } from "../config";
+const API_BASE = `${BACKEND_URL}/api/donor`;
 
 export const getProfile = async (token) => {
   try {

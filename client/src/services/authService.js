@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:5000/api/auth"
+import { BACKEND_URL } from "../config";
+const API_BASE = `${BACKEND_URL}/api/auth`;
 
 export const registerUser = async (data) => {
   try {
