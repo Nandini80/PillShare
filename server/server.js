@@ -1,23 +1,119 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const path = require('path');
+const express = require("express")
+const mongoose = require("mongoose")
+const dotenv = require("dotenv")
+const cors = require("cors")
+const path = require("path")
+const fs = require("fs")
 
-const needyRoutes = require('./routes/needyRoutes');
+// Load environment variables
+dotenv.config()
 
-dotenv.config();
-const app = express();
+// Import routes
+const authRoutes = require("./routes/authRoutes")
+const needyRoutes = require("./routes/needyRoutes")
+const donorRoutes = require("./routes/donorRoutes")
 
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const app = express()
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB error:', err));
+// Middleware
+app.use(cors())
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
-app.use('/api/needy', needyRoutes);
+// Create uploads directories if they don't exist
+const uploadsDir = path.join(__dirname, "uploads")
+const prescriptionsDir = path.join(__dirname, "uploads", "prescriptions")
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir)
+}
+if (!fs.existsSync(prescriptionsDir)) {
+  fs.mkdirSync(prescriptionsDir, { recursive: true })
+}
+
+// Static file serving
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+
+// Database connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.error("MongoDB connection error:", err))
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "PillShare API is running",
+    timestamp: new Date().toISOString(),
+  })
+})
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  })
+})
+
+// API Routes
+app.use("/api/auth", authRoutes)
+app.use("/api/needy", needyRoutes)
+app.use("/api/donor", donorRoutes)
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err)
+
+  if (err.name === "ValidationError") {
+    const errors = Object.values(err.errors).map((e) => e.message)
+    return res.status(400).json({
+      success: false,
+      message: "Validation Error",
+      errors,
+    })
+  }
+
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid ID format",
+    })
+  }
+
+  if (err.code === 11000) {
+    return res.status(400).json({
+      success: false,
+      message: "Duplicate field value",
+    })
+  }
+
+  if (err.message.includes("Only images and PDF files are allowed")) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    })
+  }
+
+  res.status(500).json({
+    success: false,
+    message: "Server Error",
+    error: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
+  })
+})
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
+  })
+})
+
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`)
+  console.log(`MongoDB URI: ${process.env.MONGO_URI ? "Connected" : "Not configured"}`)
+})

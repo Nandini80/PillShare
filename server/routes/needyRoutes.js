@@ -1,13 +1,44 @@
-const express = require('express');
-const router = express.Router();
-const needyController = require('../controllers/needyController');
-const auth = require('../middleware/auth');
-const multer = require('multer');
+const express = require("express")
+const router = express.Router()
+const needyController = require("../controllers/needyController")
+const auth = require("../middleware/auth")
+const multer = require("multer")
+const path = require("path")
 
-const upload = multer({ dest: 'uploads/' });
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/prescriptions/")
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    cb(null, "prescription-" + uniqueSuffix + path.extname(file.originalname))
+  },
+})
 
-router.put('/profile', auth, needyController.updateProfile);
-router.put('/change-password', auth, needyController.changePassword);
-router.post('/search', auth, upload.single('prescription'), needyController.uploadSearch);
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/") || file.mimetype === "application/pdf") {
+      cb(null, true)
+    } else {
+      cb(new Error("Only images and PDF files are allowed!"), false)
+    }
+  },
+})
 
-module.exports = router;
+// Profile routes
+router.get("/profile", auth, needyController.getProfile)
+router.put("/profile", auth, needyController.updateProfile)
+
+// Search routes
+router.post("/search", auth, upload.single("prescription"), needyController.searchDonors)
+router.get("/recent-searches", auth, needyController.getRecentSearches)
+
+// Password change
+router.put("/change-password", auth, needyController.changePassword)
+
+module.exports = router

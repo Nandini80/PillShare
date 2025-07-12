@@ -1,19 +1,49 @@
-const API_BASE = 'http://localhost:5000/api/auth';
+const API_BASE = "http://localhost:5000/api/auth"
 
 export const registerUser = async (data) => {
-  const res = await fetch(`${API_BASE}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  return res.json();
-};
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+      throw new Error(result.message || "Registration failed")
+    }
+
+    return result
+  } catch (error) {
+    console.error("Registration error:", error)
+    return {
+      success: false,
+      message: error.message || "Network error occurred",
+    }
+  }
+}
 
 export const loginUser = async (data) => {
-  const res = await fetch(`${API_BASE}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  return res.json();
-};
+  try {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+      throw new Error(result.message || "Login failed")
+    }
+
+    return result
+  } catch (error) {
+    console.error("Login error:", error)
+    return {
+      success: false,
+      message: error.message || "Network error occurred",
+    }
+  }
+}

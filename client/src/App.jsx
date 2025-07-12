@@ -1,38 +1,37 @@
-// src/App.jsx
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import RegisterModal from './components/RegisterModal';
-import LoginModal from './components/LoginModal';
-import DonorDashboard from './pages/DonorDashboard';
-import NeedyDashboard from './pages/NeedyDashboard';
-import { AuthProvider, AuthContext } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { AuthProvider } from "./context/AuthContext"
+import ProtectedRoute from "./components/ProtectedRoute"
+import LandingPage from "./pages/LandingPage"
+import DonorDashboard from "./pages/DonorDashboard"
+import NeedyDashboard from "./pages/NeedyDashboard"
 
 function App() {
-  const [showRegister, setShowRegister] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-
   return (
     <AuthProvider>
       <Router>
-
-        {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
-        {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-
-        <AuthContext.Consumer>
-          {({ auth }) => (
-            <Routes>
-              <Route path="/" element={<LandingPage onRegister={() => setShowRegister(true)} onLogin={() => setShowLogin(true)} />} />
-              <Route path="/donor-dashboard" element={auth.role === 'donor' ? <DonorDashboard /> : <Navigate to="/" />} />
-              {/* <Route path="/donor-dashboard"  element = {<DonorDashboard />} /> */}
-              <Route path="/needy-dashboard" element={auth.role === 'needy' ? <NeedyDashboard /> : <Navigate to="/" />} />
-              {/* <Route path="/needy-dashboard"  element = {<NeedyDashboard />} /> */}
-            </Routes>
-          )}
-        </AuthContext.Consumer>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/donor-dashboard"
+            element={
+              <ProtectedRoute requiredRole="donor">
+                <DonorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/needy-dashboard"
+            element={
+              <ProtectedRoute requiredRole="needy">
+                <NeedyDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Router>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App

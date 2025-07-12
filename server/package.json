@@ -2,21 +2,27 @@
   "name": "server",
   "version": "1.0.0",
   "main": "server.js",
- "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js"
-},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "medicine",
+    "donation",
+    "healthcare",
+    "api"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "description": "Backend API for PillShare medicine donation platform",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
-    "dotenv": "^17.1.0",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.2"
+    "mongoose": "^8.16.2",
+    "multer": "^2.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
