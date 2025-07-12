@@ -34,9 +34,18 @@ const upload = multer({
 router.get("/profile", auth, needyController.getProfile)
 router.put("/profile", auth, needyController.updateProfile)
 
+// Data routes for dropdowns
+router.get("/available-cities", auth, needyController.getAvailableCities)
+router.get("/available-medicines", auth, needyController.getAvailableMedicines)
+
 // Search routes
 router.post("/search", auth, upload.single("prescription"), needyController.searchDonors)
 router.get("/recent-searches", auth, needyController.getRecentSearches)
+
+// Request routes
+router.post("/request", auth, needyController.createDonationRequest)
+router.get("/my-requests", auth, needyController.getMyRequests)
+router.post("/rate-donor", auth, needyController.rateDonor)
 
 // Password change
 router.put("/change-password", auth, needyController.changePassword)

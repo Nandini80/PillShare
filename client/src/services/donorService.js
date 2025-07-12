@@ -183,3 +183,85 @@ export const getNeedyRequests = async (token) => {
     return { success: false, data: [] }
   }
 }
+
+export const getAllRequests = async (token) => {
+  try {
+    const res = await fetch(`${API_BASE}/requests`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch requests")
+    }
+    return result
+  } catch (error) {
+    console.error("Error fetching requests:", error)
+    return { success: false, data: [] }
+  }
+}
+
+export const approveDonationRequest = async (requestId, message, token) => {
+  try {
+    const res = await fetch(`${API_BASE}/requests/${requestId}/approve`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to approve request")
+    }
+    return result
+  } catch (error) {
+    console.error("Error approving request:", error)
+    return { success: false, message: error.message }
+  }
+}
+
+export const rejectDonationRequest = async (requestId, message, token) => {
+  try {
+    const res = await fetch(`${API_BASE}/requests/${requestId}/reject`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to reject request")
+    }
+    return result
+  } catch (error) {
+    console.error("Error rejecting request:", error)
+    return { success: false, message: error.message }
+  }
+}
+
+export const completeDonationRequest = async (requestId, token) => {
+  try {
+    const res = await fetch(`${API_BASE}/requests/${requestId}/complete`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to complete request")
+    }
+    return result
+  } catch (error) {
+    console.error("Error completing request:", error)
+    return { success: false, message: error.message }
+  }
+}

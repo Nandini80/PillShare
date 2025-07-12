@@ -1,5 +1,7 @@
 const User = require("../models/User")
 const Medicine = require("../models/Medicine")
+const PrescriptionSearch = require("../models/PrescriptionSearch")
+const DonationRequest = require("../models/DonationRequest") // Import DonationRequest model
 const bcrypt = require("bcryptjs")
 
 // Get donor profile
@@ -208,7 +210,7 @@ exports.deleteMedicine = async (req, res) => {
   }
 }
 
-// Delete expired medicines
+// Delete expired medicines - Updated route name
 exports.deleteExpiredMedicines = async (req, res) => {
   try {
     const result = await Medicine.deleteMany({
@@ -222,6 +224,250 @@ exports.deleteExpiredMedicines = async (req, res) => {
     })
   } catch (error) {
     console.error("Delete expired medicines error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+// Get needy requests for donor's medicines
+exports.getNeedyRequests = async (req, res) => {
+  try {
+    // Get donor's location
+    const donor = await User.findById(req.user._id)
+
+    // Find prescription searches that match donor's medicines and location
+    const needyRequests = await PrescriptionSearch.find({
+      $or: [{ region: { $regex: donor.city, $options: "i" } }, { region: { $regex: donor.state, $options: "i" } }],
+    })
+      .populate("needyId", "name email phone city state address")
+      .sort({ createdAt: -1 })
+      .limit(20)
+
+    // Get donor's medicines to match with requests
+    const donorMedicines = await Medicine.find({
+      donorId: req.user._id,
+      expiryDate: { $gte: new Date() },
+      isAvailable: true,
+    })
+
+    // Filter requests that match donor's available medicines
+    const matchingRequests = needyRequests.filter((request) => {
+      return donorMedicines.some(
+        (medicine) =>
+          medicine.name.toLowerCase().includes(request.medicine.toLowerCase()) ||
+          request.medicine.toLowerCase().includes(medicine.name.toLowerCase()),
+      )
+    })
+
+    const formattedRequests = matchingRequests.map((request) => ({
+      _id: request._id,
+      needyName: request.needyId.name,
+      needyEmail: request.needyId.email,
+      needyPhone: request.needyId.phone,
+      needyAddress: `${request.needyId.city}, ${request.needyId.state}`,
+      medicineName: request.medicine,
+      region: request.region,
+      prescriptionUrl: request.prescriptionUrl,
+      requestDate: request.createdAt,
+      status: "pending", // This could be enhanced with actual status tracking
+    }))
+
+    res.json({
+      success: true,
+      data: formattedRequests,
+    })
+  } catch (error) {
+    console.error("Get needy requests error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+// Approve donation request
+exports.approveDonationRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params
+    const { message } = req.body
+
+    const request = await DonationRequest.findById(requestId).populate("donorId needyId")
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      })
+    }
+
+    if (request.donorId._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to approve this request",
+      })
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Request has already been processed",
+      })
+    }
+
+    // Get donor's contact information
+    const donor = await User.findById(req.user._id)
+
+    request.status = "approved"
+    request.donorContact = {
+      phone: donor.phone,
+      address: `${donor.address}, ${donor.city}, ${donor.state}`,
+    }
+    request.message = message || ""
+    request.updatedAt = Date.now()
+
+    await request.save()
+
+    res.json({
+      success: true,
+      message: "Request approved successfully",
+      data: request,
+    })
+  } catch (error) {
+    console.error("Approve donation request error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+// Reject donation request
+exports.rejectDonationRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params
+    const { message } = req.body
+
+    const request = await DonationRequest.findById(requestId)
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      })
+    }
+
+    if (request.donorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to reject this request",
+      })
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Request has already been processed",
+      })
+    }
+
+    request.status = "rejected"
+    request.message = message || ""
+    request.updatedAt = Date.now()
+
+    await request.save()
+
+    res.json({
+      success: true,
+      message: "Request rejected successfully",
+    })
+  } catch (error) {
+    console.error("Reject donation request error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+// Mark request as completed
+exports.completeDonationRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params
+
+    const request = await DonationRequest.findById(requestId)
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      })
+    }
+
+    if (request.donorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to complete this request",
+      })
+    }
+
+    if (request.status !== "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Request must be approved before completion",
+      })
+    }
+
+    request.status = "completed"
+    request.updatedAt = Date.now()
+
+    await request.save()
+
+    res.json({
+      success: true,
+      message: "Request marked as completed",
+    })
+  } catch (error) {
+    console.error("Complete donation request error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+// Get all requests for donor
+exports.getAllRequests = async (req, res) => {
+  try {
+    const requests = await DonationRequest.find({ donorId: req.user._id })
+      .populate("needyId", "name email phone city state address")
+      .populate("medicineId", "name category description quantity")
+      .sort({ createdAt: -1 })
+
+    const formattedRequests = requests.map((request) => ({
+      _id: request._id,
+      needyName: request.needyId.name,
+      needyEmail: request.needyId.email,
+      needyPhone: request.needyId.phone,
+      needyAddress: `${request.needyId.city}, ${request.needyId.state}`,
+      medicineName: request.medicineName,
+      quantity: request.quantity,
+      status: request.status,
+      message: request.message,
+      prescriptionUrl: request.prescriptionUrl,
+      rating: request.rating,
+      ratingComment: request.ratingComment,
+      createdAt: request.createdAt,
+      updatedAt: request.updatedAt,
+    }))
+
+    res.json({
+      success: true,
+      data: formattedRequests,
+    })
+  } catch (error) {
+    console.error("Get all requests error:", error)
     res.status(500).json({
       success: false,
       message: "Server error",

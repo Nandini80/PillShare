@@ -108,6 +108,68 @@ export const searchDonors = async (searchQuery, region, prescriptionFile, token)
   }
 }
 
+export const createDonationRequest = async (donorId, medicineId, message, token) => {
+  try {
+    const res = await fetch(`${API_BASE}/request`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ donorId, medicineId, message }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to create request")
+    }
+    return result
+  } catch (error) {
+    console.error("Error creating request:", error)
+    return { success: false, message: error.message }
+  }
+}
+
+export const getMyRequests = async (token) => {
+  try {
+    const res = await fetch(`${API_BASE}/my-requests`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch requests")
+    }
+    return result
+  } catch (error) {
+    console.error("Error fetching requests:", error)
+    return { success: false, data: [] }
+  }
+}
+
+export const rateDonor = async (requestId, rating, comment, token) => {
+  try {
+    const res = await fetch(`${API_BASE}/rate-donor`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ requestId, rating, comment }),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to rate donor")
+    }
+    return result
+  } catch (error) {
+    console.error("Error rating donor:", error)
+    return { success: false, message: error.message }
+  }
+}
+
 export const changePassword = async (passwordData, token) => {
   try {
     const res = await fetch(`${API_BASE}/change-password`, {

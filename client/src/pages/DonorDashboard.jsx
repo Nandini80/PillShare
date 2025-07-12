@@ -3,22 +3,7 @@
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
-import {
-  Heart,
-  User,
-  Settings,
-  Plus,
-  Package,
-  Calendar,
-  Pill,
-  Trash2,
-  Edit3,
-  Bell,
-  LogOut,
-  Home,
-  AlertTriangle,
-  ChevronDown,
-} from "lucide-react"
+import { Heart, User, Settings, Plus, Package, Bell, LogOut, Home, ChevronDown } from "lucide-react"
 import {
   getProfile,
   updateProfile,
@@ -27,8 +12,15 @@ import {
   deleteMedicine,
   deleteExpiredMedicines,
   changePassword,
+  getAllRequests,
+  approveDonationRequest,
+  rejectDonationRequest,
+  completeDonationRequest,
 } from "../services/donorService"
 import axios from "axios"
+import Footer from "../components/Footer"
+import DonorDashboardHome from "../components/donor/DonorDashboardHome"
+import DonorRequests from "../components/donor/DonorRequests"
 
 const DonorDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -69,6 +61,9 @@ const DonorDashboard = () => {
   const [selectedCity, setSelectedCity] = useState("")
   const [loadingCities, setLoadingCities] = useState(false)
 
+  // Request states
+  const [allRequests, setAllRequests] = useState([])
+
   const { auth, logout } = useContext(AuthContext)
   const navigate = useNavigate()
 
@@ -77,6 +72,7 @@ const DonorDashboard = () => {
       fetchProfile()
       fetchMedicines()
       fetchStates()
+      fetchAllRequests()
     }
   }, [auth.token])
 
@@ -88,6 +84,11 @@ const DonorDashboard = () => {
       setSelectedCity("")
     }
   }, [selectedState])
+
+  // Profile completeness check function
+  const isProfileComplete = () => {
+    return profile.name && profile.email && profile.phone && profile.address && selectedState && selectedCity
+  }
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -114,6 +115,17 @@ const DonorDashboard = () => {
       }
     } catch (error) {
       console.error("Failed to fetch medicines")
+    }
+  }
+
+  const fetchAllRequests = async () => {
+    try {
+      const result = await getAllRequests(auth.token)
+      if (result.success) {
+        setAllRequests(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch requests")
     }
   }
 
@@ -182,6 +194,13 @@ const DonorDashboard = () => {
 
   const handleAddMedicine = async (e) => {
     e.preventDefault()
+
+    if (!isProfileComplete()) {
+      setError("Please complete your profile before donating medicine")
+      setActiveTab("profile")
+      return
+    }
+
     setLoading(true)
     setError("")
     setSuccess("")
@@ -197,7 +216,7 @@ const DonorDashboard = () => {
           category: "",
           description: "",
         })
-        fetchMedicines() // Refresh the list
+        fetchMedicines()
       } else {
         setError(result.message)
       }
@@ -276,106 +295,68 @@ const DonorDashboard = () => {
     setLoading(false)
   }
 
+  const handleApproveRequest = async (requestId, message) => {
+    setLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const result = await approveDonationRequest(requestId, message, auth.token)
+      if (result.success) {
+        setSuccess("Request approved successfully")
+        fetchAllRequests()
+      } else {
+        setError(result.message)
+      }
+    } catch (error) {
+      setError("Failed to approve request")
+    }
+    setLoading(false)
+  }
+
+  const handleRejectRequest = async (requestId) => {
+    setLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const result = await rejectDonationRequest(requestId, "", auth.token)
+      if (result.success) {
+        setSuccess("Request rejected successfully")
+        fetchAllRequests()
+      } else {
+        setError(result.message)
+      }
+    } catch (error) {
+      setError("Failed to reject request")
+    }
+    setLoading(false)
+  }
+
+  const handleCompleteRequest = async (requestId) => {
+    if (window.confirm("Mark this request as completed?")) {
+      setLoading(true)
+      setError("")
+      setSuccess("")
+
+      try {
+        const result = await completeDonationRequest(requestId, auth.token)
+        if (result.success) {
+          setSuccess("Request marked as completed")
+          fetchAllRequests()
+        } else {
+          setError(result.message)
+        }
+      } catch (error) {
+        setError("Failed to complete request")
+      }
+      setLoading(false)
+    }
+  }
+
   const isExpired = (expiryDate) => {
     return new Date(expiryDate) < new Date()
   }
-
-  const expiredMedicines = donatedMedicines.filter((medicine) => isExpired(medicine.expiryDate))
-
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 border border-blue-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Welcome back, {profile.name}!</h2>
-            <p className="text-gray-600 mt-1">Thank you for making a difference in people's lives</p>
-          </div>
-          <div className="hidden md:block">
-            <Heart className="w-16 h-16 text-red-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Donations</p>
-              <p className="text-2xl font-bold text-blue-600">{donatedMedicines.length}</p>
-            </div>
-            <Package className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Available Medicines</p>
-              <p className="text-2xl font-bold text-green-600">
-                {donatedMedicines.filter((m) => !isExpired(m.expiryDate)).length}
-              </p>
-            </div>
-            <Pill className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Expired Items</p>
-              <p className="text-2xl font-bold text-red-600">{expiredMedicines.length}</p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Expired Medicine Alert */}
-      {expiredMedicines.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
-              <p className="text-red-800">
-                You have {expiredMedicines.length} expired medicine(s) that should be removed
-              </p>
-            </div>
-            <button
-              onClick={handleDeleteExpired}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Remove All Expired
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-        <div className="space-y-3">
-          {donatedMedicines.slice(0, 3).map((medicine) => (
-            <div key={medicine._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center">
-                <Pill className="w-4 h-4 text-blue-500 mr-3" />
-                <div>
-                  <p className="font-medium">{medicine.name}</p>
-                  <p className="text-sm text-gray-600">Added on {new Date(medicine.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  isExpired(medicine.expiryDate) ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                }`}
-              >
-                {isExpired(medicine.expiryDate) ? "Expired" : "Available"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
 
   const renderProfile = () => (
     <div className="space-y-6">
@@ -384,38 +365,87 @@ const DonorDashboard = () => {
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{success}</div>
       )}
 
+      {/* Profile Completion Status */}
+      <div
+        className={`rounded-xl p-4 border ${isProfileComplete() ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}`}
+      >
+        <div className="flex items-center">
+          {isProfileComplete() ? (
+            <>
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-green-800 font-medium">Profile Complete</p>
+                <p className="text-green-700 text-sm">You can now donate medicines and receive requests.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white font-bold">!</span>
+              </div>
+              <div>
+                <p className="text-yellow-800 font-medium">Profile Incomplete</p>
+                <p className="text-yellow-700 text-sm">Please fill all required fields to start donating.</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
         <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Full Name <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your full name"
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email <span className="text-red-500">*</span>
+            </label>
             <input
               type="email"
               value={profile.email}
               onChange={(e) => setProfile({ ...profile, email: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your email"
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone <span className="text-red-500">*</span>
+            </label>
             <input
               type="tel"
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your phone number"
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              State <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <select
                 value={selectedState}
@@ -424,7 +454,8 @@ const DonorDashboard = () => {
                   setSelectedCity("")
                 }}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                style={{ maxHeight: "120px", overflowY: "auto" }}
+                required
+                size="4"
               >
                 <option value="">Select State</option>
                 {states.map((state, index) => (
@@ -437,14 +468,17 @@ const DonorDashboard = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              City <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
                 disabled={!selectedState || loadingCities}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-                style={{ maxHeight: "120px", overflowY: "auto" }}
+                required
+                size="4"
               >
                 <option value="">
                   {loadingCities ? "Loading cities..." : selectedState ? "Select City" : "Select State First"}
@@ -459,12 +493,16 @@ const DonorDashboard = () => {
             </div>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={profile.address}
               onChange={(e) => setProfile({ ...profile, address: e.target.value })}
               rows="3"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your complete address"
+              required
             />
           </div>
         </div>
@@ -488,7 +526,33 @@ const DonorDashboard = () => {
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{success}</div>
       )}
 
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+      {/* Profile Completion Check */}
+      {!isProfileComplete() && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-4">
+              <span className="text-white font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">Complete Your Profile First</h3>
+              <p className="text-yellow-700 mb-4">
+                Before you can donate medicines, please complete your profile with all required information including
+                name, phone, address, and location.
+              </p>
+              <button
+                onClick={() => setActiveTab("profile")}
+                className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+              >
+                Complete Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`bg-white rounded-xl p-6 border border-gray-200 shadow-sm ${!isProfileComplete() ? "opacity-50 pointer-events-none" : ""}`}
+      >
         <h3 className="text-lg font-semibold mb-4">Donate Medicine</h3>
         <form onSubmit={handleAddMedicine}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -501,6 +565,7 @@ const DonorDashboard = () => {
                 placeholder="Enter medicine name"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={!isProfileComplete()}
               />
             </div>
             <div>
@@ -512,6 +577,7 @@ const DonorDashboard = () => {
                 placeholder="Enter quantity"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={!isProfileComplete()}
               />
             </div>
             <div>
@@ -522,6 +588,7 @@ const DonorDashboard = () => {
                 onChange={(e) => setMedicineForm({ ...medicineForm, expiryDate: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={!isProfileComplete()}
               />
             </div>
             <div>
@@ -531,6 +598,7 @@ const DonorDashboard = () => {
                 onChange={(e) => setMedicineForm({ ...medicineForm, category: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={!isProfileComplete()}
               >
                 <option value="">Select Category</option>
                 <option value="Pain Relief">Pain Relief</option>
@@ -547,14 +615,15 @@ const DonorDashboard = () => {
                 placeholder="Additional details about the medicine condition..."
                 rows="3"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={!isProfileComplete()}
               />
             </div>
           </div>
           <div className="mt-6">
             <button
               type="submit"
-              disabled={loading}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              disabled={loading || !isProfileComplete()}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2 inline" />
               {loading ? "Adding..." : "Add Medicine"}
@@ -605,24 +674,24 @@ const DonorDashboard = () => {
                 Quantity: {medicine.quantity}
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="w-4 h-4 mr-2" />
+                <span className="w-4 h-4 mr-2">📅</span>
                 Expires: {new Date(medicine.expiryDate).toLocaleDateString()}
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <Pill className="w-4 h-4 mr-2" />
+                <span className="w-4 h-4 mr-2">💊</span>
                 Category: {medicine.category}
               </div>
             </div>
             <p className="text-sm text-gray-600 mb-4">{medicine.description}</p>
             <div className="flex justify-between items-center">
               <button className="text-blue-600 hover:text-blue-800 transition-colors">
-                <Edit3 className="w-4 h-4" />
+                <span className="text-sm">Edit</span>
               </button>
               <button
                 onClick={() => handleDeleteMedicine(medicine._id)}
                 className="text-red-600 hover:text-red-800 transition-colors"
               >
-                <Trash2 className="w-4 h-4" />
+                <span className="text-sm">Delete</span>
               </button>
             </div>
           </div>
@@ -690,6 +759,7 @@ const DonorDashboard = () => {
     { id: "profile", label: "Profile", icon: User },
     { id: "donate", label: "Donate", icon: Plus },
     { id: "donations", label: "My Donations", icon: Package },
+    { id: "requests", label: "All Requests", icon: Bell },
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
@@ -752,14 +822,37 @@ const DonorDashboard = () => {
 
           {/* Main Content */}
           <div className="flex-1">
-            {activeTab === "dashboard" && renderDashboard()}
+            {activeTab === "dashboard" && (
+              <DonorDashboardHome
+                profile={profile}
+                donatedMedicines={donatedMedicines}
+                isProfileComplete={isProfileComplete}
+                setActiveTab={setActiveTab}
+                handleDeleteExpired={handleDeleteExpired}
+                allRequests={allRequests}
+                fetchAllRequests={fetchAllRequests}
+              />
+            )}
             {activeTab === "profile" && renderProfile()}
             {activeTab === "donate" && renderDonate()}
             {activeTab === "donations" && renderMyDonations()}
+            {activeTab === "requests" && (
+              <DonorRequests
+                allRequests={allRequests}
+                loading={loading}
+                error={error}
+                success={success}
+                handleApproveRequest={handleApproveRequest}
+                handleRejectRequest={handleRejectRequest}
+                handleCompleteRequest={handleCompleteRequest}
+              />
+            )}
             {activeTab === "settings" && renderSettings()}
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }
