@@ -35,7 +35,7 @@ const PillShareLanding = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
-    setError("") // Clear error when user types
+    setError("")
   }
 
   const handleSubmit = async (e) => {
@@ -59,17 +59,14 @@ const PillShareLanding = () => {
         })
 
         if (data.token) {
-          // Use the context's login method instead of manual localStorage
           login(data.token, data.role, data.user)
           setShowAuthModal(false)
-          // Reset form
           setFormData({
             name: "",
             email: "",
             password: "",
             confirmPassword: "",
           })
-          // Navigation will happen automatically due to useEffect
         } else {
           setError(data.message || "Registration failed")
         }
@@ -80,17 +77,14 @@ const PillShareLanding = () => {
         })
 
         if (data.token) {
-          // Use the context's login method
           login(data.token, data.role, data.user)
           setShowAuthModal(false)
-          // Reset form
           setFormData({
             name: "",
             email: "",
             password: "",
             confirmPassword: "",
           })
-          // Navigation will happen automatically due to useEffect
         } else {
           setError(data.message || "Login failed")
         }
@@ -105,7 +99,7 @@ const PillShareLanding = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Navigation */}
+      {/* Header */}
       <nav className="bg-white shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -117,7 +111,6 @@ const PillShareLanding = () => {
                 </span>
               </div>
             </div>
-            {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 <a href="#home" className="text-gray-700 hover:text-blue-600 px-3 py-2 transition-colors">
@@ -434,10 +427,7 @@ const PillShareLanding = () => {
         </div>
       </section>
 
-      {/* Use shared Footer */}
       <Footer />
-
-      {/* Auth Modal with blurred background */}
       {showAuthModal && (
         <AuthModal
           authMode={authMode}

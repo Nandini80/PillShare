@@ -29,7 +29,6 @@ const DonorDashboard = () => {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  // Profile and medicines data
   const [donatedMedicines, setDonatedMedicines] = useState([])
   const [profile, setProfile] = useState({
     name: "",
@@ -40,7 +39,6 @@ const DonorDashboard = () => {
     city: "",
   })
 
-  // Form states
   const [medicineForm, setMedicineForm] = useState({
     name: "",
     quantity: "",
@@ -809,9 +807,11 @@ const DonorDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="flex items-center">
-                <Heart className="w-8 h-8 text-red-500 mr-2" />
-                <span className="text-xl font-bold text-gray-900">PillShare</span>
+              <div className="flex-shrink-0 flex items-center">
+                <Heart className="h-8 w-8 text-red-500 mr-2" />
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  PillShare
+                </span>
               </div>
             </div>
 
