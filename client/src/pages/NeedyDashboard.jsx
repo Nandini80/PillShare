@@ -628,7 +628,7 @@ const NeedyDashboard = () => {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }

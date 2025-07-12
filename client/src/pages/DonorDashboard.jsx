@@ -883,7 +883,7 @@ const DonorDashboard = () => {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }

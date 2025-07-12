@@ -35,6 +35,24 @@ const NeedyFindMedicine = ({
   handleFileUpload,
   removePrescriptionFile,
 }) => {
+  const groupedMedicines = availableMedicines.reduce((acc, medicine) => {
+    const normalizedName = medicine.name.toLowerCase().trim()
+    if (acc[normalizedName]) {
+      acc[normalizedName].totalQuantity += medicine.availableCount || 0
+      acc[normalizedName].donorCount += 1
+    } else {
+      acc[normalizedName] = {
+        name: medicine.name,
+        normalizedName,
+        totalQuantity: medicine.availableCount || 0,
+        donorCount: 1,
+      }
+    }
+    return acc
+  }, {})
+
+  const uniqueMedicines = Object.values(groupedMedicines)
+
   const renderStars = (rating) => {
     const stars = []
     for (let i = 1; i <= 5; i++) {
@@ -49,12 +67,10 @@ const NeedyFindMedicine = ({
     if (!isProfileComplete()) {
       return
     }
-
     if (!prescriptionFile) {
       alert("Please upload a prescription before searching for medicines")
       return
     }
-
     handleSearch()
   }
 
@@ -63,7 +79,6 @@ const NeedyFindMedicine = ({
       alert("Please upload a prescription before making a request")
       return
     }
-
     handleCreateRequest(donorId, medicineId)
   }
 
@@ -125,16 +140,20 @@ const NeedyFindMedicine = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={!isProfileComplete()}
-              style={{ maxHeight: "120px", overflowY: "auto" }}
             >
               <option value="">Select Medicine</option>
-              {availableMedicines.slice(0, 4).map((medicine, index) => (
+              {uniqueMedicines.slice(0, 10).map((medicine, index) => (
                 <option key={index} value={medicine.name}>
-                  {medicine.name} ({medicine.availableCount} available)
+                  {medicine.name} ({medicine.totalQuantity} units from {medicine.donorCount} donor
+                  {medicine.donorCount > 1 ? "s" : ""})
                 </option>
               ))}
             </select>
+            {uniqueMedicines.length > 10 && (
+              <p className="text-xs text-gray-500 mt-1">Showing top 10 medicines. Type to search for more.</p>
+            )}
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
             <select
@@ -142,15 +161,17 @@ const NeedyFindMedicine = ({
               onChange={(e) => setSelectedRegion(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={!isProfileComplete()}
-              style={{ maxHeight: "120px", overflowY: "auto" }}
             >
               <option value="">Select Region</option>
-              {availableCities.slice(0, 4).map((city, index) => (
+              {availableCities.slice(0, 10).map((city, index) => (
                 <option key={index} value={city.name}>
                   {city.name} ({city.medicineCount} medicines available)
                 </option>
               ))}
             </select>
+            {availableCities.length > 10 && (
+              <p className="text-xs text-gray-500 mt-1">Showing top 10 cities. More available.</p>
+            )}
           </div>
         </div>
 
@@ -230,7 +251,7 @@ const NeedyFindMedicine = ({
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
                       <Pill className="h-4 w-4 inline mr-1" />
-                      {donor.medicine} - {donor.quantity} units
+                      {donor.medicine} - {donor.quantity} units available
                     </p>
                     <p className="text-sm text-gray-600 mb-1">
                       <MapPin className="h-4 w-4 inline mr-1" />
@@ -266,6 +287,30 @@ const NeedyFindMedicine = ({
           </div>
         </div>
       )}
+      
+      {/* Medicine Statistics */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Medicines Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {uniqueMedicines.slice(0, 6).map((medicine, index) => (
+            <div key={index} className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-gray-900">{medicine.name}</h3>
+                <Pill className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="text-sm text-gray-600">{medicine.totalQuantity} units available</p>
+              <p className="text-xs text-gray-500">
+                From {medicine.donorCount} donor{medicine.donorCount > 1 ? "s" : ""}
+              </p>
+            </div>
+          ))}
+        </div>
+        {uniqueMedicines.length > 6 && (
+          <p className="text-center text-sm text-gray-500 mt-4">
+            And {uniqueMedicines.length - 6} more medicines available...
+          </p>
+        )}
+      </div>
 
       {/* Recent Searches */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -284,7 +329,7 @@ const NeedyFindMedicine = ({
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center py-4">No recent searches</p>
+            <div className="text-gray-500 text-center py-4">No recent searches</div>
           )}
         </div>
       </div>
