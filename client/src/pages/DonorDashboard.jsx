@@ -266,6 +266,12 @@ const DonorDashboard = () => {
       return
     }
 
+    if (passwordForm.oldPassword === passwordForm.newPassword) {
+      setError("New password must be different from current password")
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await changePassword(
         {

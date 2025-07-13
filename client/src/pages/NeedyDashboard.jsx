@@ -259,6 +259,12 @@ const NeedyDashboard = () => {
       return
     }
 
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      setError("New password must be different from current password")
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await changePassword(
         {
@@ -290,6 +296,9 @@ const NeedyDashboard = () => {
       console.error("Failed to fetch requests")
     }
   }
+
+  // Make fetchMyRequests available globally for refresh after rating
+  window.refreshMyRequests = fetchMyRequests
 
   const handleCreateRequest = async (donorId, medicineId) => {
     setLoading(true)
@@ -622,6 +631,7 @@ const NeedyDashboard = () => {
                 error={error}
                 success={success}
                 rateDonor={rateDonor}
+                authToken={auth.token}
               />
             )}
             {activeTab === "profile" && renderProfile()}
