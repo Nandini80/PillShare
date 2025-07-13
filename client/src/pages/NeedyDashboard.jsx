@@ -373,10 +373,12 @@ const NeedyDashboard = () => {
             type="email"
             value={profileData.email || ""}
             onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100 cursor-not-allowed"
             placeholder="Enter your email"
             required
+            disabled
           />
+          <p className="text-xs text-gray-500 mt-1">Email cannot be changed after registration</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

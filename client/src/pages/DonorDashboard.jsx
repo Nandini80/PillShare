@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
@@ -354,34 +356,22 @@ const DonorDashboard = () => {
 
   const renderProfile = () => (
     <div className="space-y-6">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>}
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          {success}
-        </div>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">{success}</div>
       )}
 
       {/* Profile Completion Status */}
       <div
         className={`rounded-xl p-4 border ${
-          isProfileComplete()
-            ? "bg-green-50 border-green-200"
-            : "bg-yellow-50 border-yellow-200"
+          isProfileComplete() ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"
         }`}
       >
         <div className="flex items-center">
           {isProfileComplete() ? (
             <>
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -391,9 +381,7 @@ const DonorDashboard = () => {
               </div>
               <div>
                 <p className="text-green-800 font-medium">Profile Complete</p>
-                <p className="text-green-700 text-sm">
-                  You can now donate medicines and receive requests.
-                </p>
+                <p className="text-green-700 text-sm">You can now donate medicines and receive requests.</p>
               </div>
             </>
           ) : (
@@ -402,12 +390,8 @@ const DonorDashboard = () => {
                 <span className="text-white font-bold">!</span>
               </div>
               <div>
-                <p className="text-yellow-800 font-medium">
-                  Profile Incomplete
-                </p>
-                <p className="text-yellow-700 text-sm">
-                  Please fill all required fields to start donating.
-                </p>
+                <p className="text-yellow-800 font-medium">Profile Incomplete</p>
+                <p className="text-yellow-700 text-sm">Please fill all required fields to start donating.</p>
               </div>
             </>
           )}
@@ -437,13 +421,13 @@ const DonorDashboard = () => {
             <input
               type="email"
               value={profile.email}
-              onChange={(e) =>
-                setProfile({ ...profile, email: e.target.value })
-              }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-100 cursor-not-allowed"
               placeholder="Enter your email"
               required
+              disabled
             />
+            <p className="text-xs text-gray-500 mt-1">Email cannot be changed after registration</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -452,9 +436,7 @@ const DonorDashboard = () => {
             <input
               type="tel"
               value={profile.phone}
-              onChange={(e) =>
-                setProfile({ ...profile, phone: e.target.value })
-              }
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your phone number"
               required
@@ -499,11 +481,7 @@ const DonorDashboard = () => {
                 // size="4"
               >
                 <option value="">
-                  {loadingCities
-                    ? "Loading cities..."
-                    : selectedState
-                    ? "Select City"
-                    : "Select State First"}
+                  {loadingCities ? "Loading cities..." : selectedState ? "Select City" : "Select State First"}
                 </option>
                 {cities.map((city, index) => (
                   <option key={index} value={city}>
@@ -520,9 +498,7 @@ const DonorDashboard = () => {
             </label>
             <textarea
               value={profile.address}
-              onChange={(e) =>
-                setProfile({ ...profile, address: e.target.value })
-              }
+              onChange={(e) => setProfile({ ...profile, address: e.target.value })}
               rows="3"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your complete address"
@@ -541,7 +517,7 @@ const DonorDashboard = () => {
         </div>
       </div>
     </div>
-  );
+  )
 
   const renderDonate = () => (
     <div className="space-y-6">
