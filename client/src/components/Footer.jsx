@@ -18,7 +18,7 @@ const Footer = () => {
               <a href="https://www.linkedin.com/in/nandini-jindal-33a3a7282/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Linkedin className="h-6 w-6" />
               </a>
-              <a href="https://github.com/Nandini80" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://github.com/Nandini80/PillShare" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-6 w-6" />
               </a>
               <a href="mailto:nandinijindal010@gmail.com" className="text-gray-400 hover:text-white transition-colors">
