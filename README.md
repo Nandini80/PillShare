@@ -1,7 +1,7 @@
 # PillShare - Medicine Donation Platform
 
-PillShare is a community-driven platform that connects medicine donors with those in need, ensuring that surplus medicines reach people who require them most. The platform facilitates safe, verified medicine donations within local communities.
-
+PillShare is a community-driven platform that connects medicine donors with those in need, ensuring that surplus medicines reach people who require them most. The platform facilitates safe, verified medicine donations within local communities. <br>
+Hosted link: https://pillshare.vercel.app/ 
 ## 🌟 Features
 
 ### For Donors
@@ -54,112 +54,30 @@ Before running this project, make sure you have the following installed:
 ## 🛠️ Installation
 
 ### 1. Clone the Repository
-\`\`\`bash
-git clone https://github.com/yourusername/pillshare.git
-cd pillshare
-\`\`\`
+git clone https://github.com/Nandini80/PillShare.git <br>
+cd PillShare
 
-### 2. Install Dependencies
-\`\`\`bash
 # Install backend dependencies
+cd server <br>
 npm install
 
-# Install frontend dependencies (if separate)
-cd client
+# Install frontend dependencies
+cd client <br>
 npm install
-cd ..
-\`\`\`
 
 ### 3. Environment Setup
-Create a `.env` file in the root directory:
+Create a `.env` file in the server directory(take reference from .env.example)
 
-\`\`\`env
-# Database
-MONGODB_URI=mongodb://localhost:27017/pillshare
-# or for MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/pillshare
+### 4. Start the Application
+#### Start backend server
+nodemon server.js
 
-# JWT Secret
-JWT_SECRET=your_super_secret_jwt_key_here
-
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# File Upload
-UPLOAD_PATH=uploads/
-MAX_FILE_SIZE=5242880
-
-# Email Configuration (Optional)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-\`\`\`
-
-### 4. Database Setup
-Make sure MongoDB is running on your system, or configure MongoDB Atlas connection in the `.env` file.
-
-### 5. Start the Application
-\`\`\`bash
-# Start backend server
-npm run server
-
-# Start frontend (if separate)
-npm run client
-
-# Start both concurrently
+#### Start frontend
 npm run dev
-\`\`\`
 
 The application will be available at:
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
-
-## 📁 Project Structure
-
-\`\`\`
-pillshare/
-├── client/                     # Frontend React application
-│   ├── public/
-│   ├── src/
-│   │   ├── components/         # Reusable components
-│   │   │   ├── donor/         # Donor-specific components
-│   │   │   ├── needy/         # Needy user components
-│   │   │   ├── ui/            # UI components
-│   │   │   ├── AuthModal.jsx
-│   │   │   └── Footer.jsx
-│   │   ├── context/           # React context providers
-│   │   │   └── AuthContext.jsx
-│   │   ├── pages/             # Page components
-│   │   │   ├── DonorDashboard.jsx
-│   │   │   ├── NeedyDashboard.jsx
-│   │   │   └── LandingPage.jsx
-│   │   ├── services/          # API service functions
-│   │   │   ├── authService.js
-│   │   │   ├── donorService.js
-│   │   │   └── needyService.js
-│   │   └── App.jsx
-├── server/                     # Backend Node.js application
-│   ├── controllers/           # Route controllers
-│   │   ├── authController.js
-│   │   ├── donorController.js
-│   │   └── needyController.js
-│   ├── models/               # MongoDB models
-│   │   ├── User.js
-│   │   ├── Medicine.js
-│   │   └── DonationRequest.js
-│   ├── routes/               # API routes
-│   │   ├── authRoutes.js
-│   │   ├── donorRoutes.js
-│   │   └── needyRoutes.js
-│   ├── middleware/           # Custom middleware
-│   ├── uploads/              # File uploads directory
-│   └── server.js             # Main server file
-├── .env.example              # Environment variables template
-├── package.json
-└── README.md
-\`\`\`
 
 ## 🔧 API Endpoints
 
@@ -185,88 +103,6 @@ pillshare/
 - `POST /api/needy/rate` - Rate a donor
 - `GET /api/needy/medicines` - Get available medicines
 - `GET /api/needy/cities` - Get available cities
-
-## 🎯 Usage Guide
-
-### For Donors
-
-1. **Registration**: Sign up as a donor with your details
-2. **Profile Setup**: Complete your profile with contact information and location
-3. **Add Medicines**: List medicines you want to donate with:
-   - Medicine name and category
-   - Quantity available
-   - Expiry date
-   - Optional description
-4. **Manage Requests**: 
-   - Review incoming requests
-   - Approve/reject requests
-   - Mark completed donations
-5. **Track Impact**: View your donation history and ratings
-
-### For Needy Users
-
-1. **Registration**: Sign up as a needy user
-2. **Profile Completion**: Fill in all required profile information
-3. **Search Medicines**: 
-   - Upload prescription (required)
-   - Search by medicine name and location
-4. **Make Requests**: Send requests to donors
-5. **Connect**: Get donor contact details after approval
-6. **Rate Experience**: Rate donors after receiving medicines
-
-## 🔒 Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **File Upload Validation**: Secure file upload with type and size restrictions
-- **Prescription Verification**: Required prescription upload for medicine requests
-- **Profile Verification**: Complete profile required for platform access
-- **Data Sanitization**: Input validation and sanitization
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/yourusername/pillshare/issues) page
-2. Create a new issue with detailed description
-3. Contact the development team
-
-## 🚧 Roadmap
-
-- [ ] Real-time chat between donors and recipients
-- [ ] Email notifications for request updates
-- [ ] Mobile application (React Native)
-- [ ] Advanced search filters
-- [ ] Medicine expiry alerts
-- [ ] Donation analytics dashboard
-- [ ] Multi-language support
-- [ ] Integration with pharmacy APIs
-
-## 👥 Team
-
-- **Frontend Development**: React.js, Tailwind CSS
-- **Backend Development**: Node.js, Express.js, MongoDB
-- **UI/UX Design**: Modern, responsive design
-- **Security**: JWT authentication, data validation
-
-## 📊 Statistics
-
-- **Total Medicines Donated**: Track community impact
-- **Active Donors**: Number of registered donors
-- **Successful Connections**: Completed medicine transfers
-- **Cities Covered**: Geographic reach of the platform
 
 ---
 
