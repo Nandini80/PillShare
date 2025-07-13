@@ -1,18 +1,4 @@
-"use client"
-import {
-  Search,
-  MapPin,
-  Heart,
-  Pill,
-  Clock,
-  Filter,
-  Star,
-  Upload,
-  X,
-  FileText,
-  AlertCircle,
-  ChevronRight,
-} from "lucide-react"
+import { Search, MapPin, Heart, Pill, Clock, Star, Upload, X, FileText, AlertCircle, ChevronRight } from "lucide-react"
 
 const NeedyFindMedicine = ({
   isProfileComplete,
@@ -31,17 +17,16 @@ const NeedyFindMedicine = ({
   handleCreateRequest,
   handleFileUpload,
   removePrescriptionFile,
+  myRequests = [],
 }) => {
   const groupedMedicines = availableMedicines.reduce((acc, medicine) => {
     const normalizedName = medicine.name.toLowerCase().trim()
     if (acc[normalizedName]) {
-      acc[normalizedName].totalQuantity += medicine.availableCount || 0
       acc[normalizedName].donorCount += 1
     } else {
       acc[normalizedName] = {
         name: medicine.name,
         normalizedName,
-        totalQuantity: medicine.availableCount || 0,
         donorCount: 1,
       }
     }
@@ -77,6 +62,13 @@ const NeedyFindMedicine = ({
       return
     }
     handleCreateRequest(donorId, medicineId)
+  }
+
+  // Check if user has already requested this medicine from this donor
+  const hasRequestedMedicine = (donorId, medicineId) => {
+    return myRequests.some(
+      (request) => request.donorId === donorId && request.medicineId === medicineId && request.status !== "rejected",
+    )
   }
 
   return (
@@ -141,8 +133,7 @@ const NeedyFindMedicine = ({
               <option value="">Select Medicine</option>
               {uniqueMedicines.slice(0, 10).map((medicine, index) => (
                 <option key={index} value={medicine.name}>
-                  {medicine.name} ({medicine.totalQuantity} units from {medicine.donorCount} donor
-                  {medicine.donorCount > 1 ? "s" : ""})
+                  {medicine.name} (from {medicine.donorCount} donor{medicine.donorCount > 1 ? "s" : ""})
                 </option>
               ))}
             </select>
@@ -230,57 +221,60 @@ const NeedyFindMedicine = ({
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Search Results ({searchResults.length})</h2>
-            <button className="flex items-center text-blue-600 hover:text-blue-700">
-              <Filter className="h-4 w-4 mr-1" />
-              Filter
-            </button>
           </div>
           <div className="space-y-4">
-            {searchResults.map((donor) => (
-              <div key={donor._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <h3 className="font-semibold text-gray-900 mr-2">{donor.donorName}</h3>
-                      {donor.verified && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
+            {searchResults.map((donor) => {
+              const hasRequested = hasRequestedMedicine(donor.donorId, donor._id)
+              return (
+                <div key={donor._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <h3 className="font-semibold text-gray-900 mr-2">{donor.donorName}</h3>
+                        {donor.verified && (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <Pill className="h-4 w-4 inline mr-1" />
+                        {donor.medicine} - {donor.quantity} units available
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <MapPin className="h-4 w-4 inline mr-1" />
+                        {donor.address}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        <Clock className="h-4 w-4 inline mr-1" />
+                        Expires: {donor.expiry}
+                      </p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          {renderStars(Math.round(donor.rating))}
+                          <span className="ml-1">
+                            {donor.rating} ({donor.totalRatings} reviews)
+                          </span>
+                        </div>
+                        <span>{donor.donations} donations</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2 ml-4">
+                      {hasRequested ? (
+                        <span className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm">Request Sent</span>
+                      ) : (
+                        <button
+                          onClick={() => handleRequestClick(donor.donorId, donor._id)}
+                          disabled={loading || !prescriptionFile}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Heart className="h-4 w-4 mr-1" />
+                          Request
+                        </button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <Pill className="h-4 w-4 inline mr-1" />
-                      {donor.medicine} - {donor.quantity} units available
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <MapPin className="h-4 w-4 inline mr-1" />
-                      {donor.address} • {donor.distance}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-2">
-                      <Clock className="h-4 w-4 inline mr-1" />
-                      Expires: {donor.expiry}
-                    </p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        {renderStars(Math.round(donor.rating))}
-                        <span className="ml-1">
-                          {donor.rating} ({donor.totalRatings} reviews)
-                        </span>
-                      </div>
-                      <span>{donor.donations} donations</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col space-y-2 ml-4">
-                    <button
-                      onClick={() => handleRequestClick(donor.donorId, donor._id)}
-                      disabled={loading || !prescriptionFile}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Heart className="h-4 w-4 mr-1" />
-                      Request
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -295,7 +289,6 @@ const NeedyFindMedicine = ({
                 <h3 className="font-medium text-gray-900">{medicine.name}</h3>
                 <Pill className="h-5 w-5 text-blue-500" />
               </div>
-              <p className="text-sm text-gray-600">{medicine.totalQuantity} units available</p>
               <p className="text-xs text-gray-500">
                 From {medicine.donorCount} donor{medicine.donorCount > 1 ? "s" : ""}
               </p>

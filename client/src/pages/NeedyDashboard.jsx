@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
@@ -102,16 +104,16 @@ const NeedyDashboard = () => {
   }
 
   const fetchRecentSearches = async () => {
-  try {
-    const result = await getRecentSearches(auth.token)
-    if (result.success) {
-      const limitedSearches = result.data.slice(0,3)
-      setRecentSearches(limitedSearches)
+    try {
+      const result = await getRecentSearches(auth.token)
+      if (result.success) {
+        const limitedSearches = result.data.slice(0, 3)
+        setRecentSearches(limitedSearches)
+      }
+    } catch (error) {
+      console.error("Failed to fetch recent searches")
     }
-  } catch (error) {
-    console.error("Failed to fetch recent searches")
   }
-}
 
   const fetchAvailableCities = async () => {
     try {
@@ -298,6 +300,10 @@ const NeedyDashboard = () => {
       if (result.success) {
         setSuccess("Request sent successfully!")
         fetchMyRequests()
+        // Update search results to reflect the new request
+        setSearchResults((prevResults) =>
+          prevResults.map((donor) => (donor._id === medicineId ? { ...donor, hasRequested: true } : donor)),
+        )
       } else {
         setError(result.message)
       }
@@ -604,6 +610,7 @@ const NeedyDashboard = () => {
                 handleCreateRequest={handleCreateRequest}
                 handleFileUpload={handleFileUpload}
                 removePrescriptionFile={removePrescriptionFile}
+                myRequests={myRequests}
               />
             )}
             {activeTab === "requests" && (

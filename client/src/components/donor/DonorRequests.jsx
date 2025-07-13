@@ -76,20 +76,12 @@ const DonorRequests = ({
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <User className="w-4 h-4 mr-2" />
-                      Contact: {request.needyEmail}
-                      {request.status !== "pending" && ` | ${request.needyPhone}`}
+                      Contact: {request.needyEmail} | {request.needyPhone}
                     </div>
-                    {request.status !== "pending" && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Address: {request.needyAddress}
-                      </div>
-                    )}
-                    {request.status === "pending" && (
-                      <div className="text-sm text-gray-500 italic">
-                        Contact information will be visible after request approval
-                      </div>
-                    )}
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Address: {request.needyAddress}
+                    </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="w-4 h-4 mr-2" />
                       Requested: {new Date(request.createdAt).toLocaleDateString()}

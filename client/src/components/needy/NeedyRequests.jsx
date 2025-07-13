@@ -1,9 +1,7 @@
-"use client"
-
 import { useState } from "react"
-import { Star, X } from "lucide-react"
+import { Star, X, Bell } from "lucide-react"
 
-const NeedyRequests = ({ myRequests, loading, error, success, handleRateSubmit, rateDonor }) => {
+const NeedyRequests = ({ myRequests, loading, error, success, rateDonor }) => {
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [ratingData, setRatingData] = useState({ rating: 0, comment: "" })
@@ -44,8 +42,27 @@ const NeedyRequests = ({ myRequests, loading, error, success, handleRateSubmit, 
     }
   }
 
+  // Get approved requests for notification
+  const approvedRequests = myRequests.filter((request) => request.status === "approved" && !request.notificationSeen)
+
   return (
     <div className="space-y-6">
+      {/* Approval Notifications */}
+      {approvedRequests.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="flex items-center">
+            <Bell className="w-5 h-5 text-green-500 mr-2" />
+            <div className="flex-1">
+              <p className="text-green-800 font-medium">Request{approvedRequests.length > 1 ? "s" : ""} Approved!</p>
+              <p className="text-green-700 text-sm">
+                {approvedRequests.length} of your request{approvedRequests.length > 1 ? "s have" : " has"} been
+                approved. Check below for contact details.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">My Requests</h2>
         <div className="space-y-4">
@@ -74,10 +91,13 @@ const NeedyRequests = ({ myRequests, loading, error, success, handleRateSubmit, 
                         {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                       </span>
                     </p>
-                    {request.donorContact && request.status === "approved" && (
-                      <div className="text-sm text-gray-600 mb-2">
-                        <p>Phone: {request.donorContact.phone}</p>
-                        <p>Address: {request.donorContact.address}</p>
+                    {request.donor && request.status === "approved" && (
+                      <div className="text-sm text-gray-600 mb-2 bg-green-50 p-3 rounded-lg">
+                        <p className="font-medium text-green-800 mb-1">Donor Contact Details:</p>
+                        <p>Name: {request.donor.name}</p>
+                        <p>Phone: {request.donor.phone}</p>
+                        <p>Email: {request.donor.email}</p>
+                        <p>Address: {request.donor.address}</p>
                       </div>
                     )}
                     {request.status === "pending" && (

@@ -12,9 +12,10 @@ const app = express()
 
 dotenv.config()
 
+// to run locally, comment out the cors ke andr ka part
 app.use(cors({
-  origin: "https://pillshare.vercel.app",
-  credentials: true
+  // origin: "https://pillshare.vercel.app",
+  // credentials: true
 }))
 
 app.use(express.json({ limit: "10mb" }))
