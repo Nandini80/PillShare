@@ -1,6 +1,7 @@
 # PillShare - Medicine Donation Platform
 
-PillShare is a community-driven platform that connects medicine donors with those in need, ensuring that surplus medicines reach people who require them most. The platform facilitates safe, verified medicine donations within local communities. <br>
+#### Your drawers are filled with unused medicines that may soon expire. Instead of letting them go to waste, why not give them a second life? <br>
+PillShare is a community-driven platform that helps you donate surplus medicines to those who can’t afford them. By sorting your medicine cabinet, you’re not only decluttering — you’re also making a real difference in someone’s life. <br>
 Hosted link: https://pillshare.vercel.app/ 
 ## 🌟 Features
 
